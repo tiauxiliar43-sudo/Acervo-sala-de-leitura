@@ -1,0 +1,187 @@
+/* ================= CONFIGURAÇÕES GERAIS ================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+/* ================= ESTRUTURAS DE TELA (LAYOUTS) ================= */
+
+/* 1. Usado para Telas de Login e Modais de Sucesso/Erro */
+.tela-centralizada {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 2. Usado para Telas do Sistema (Acervo, Cadastros, Empréstimos) */
+.tela-painel {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* ================= CARTÕES (CAIXAS BRANCAS) ================= */
+.cartao {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.cartao-pequeno {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.cartao-formulario {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Títulos dentro dos cartões */
+.cartao h1 { font-size: 24px; color: #000; margin-bottom: 5px; }
+.cartao p { font-size: 14px; color: #666; margin-bottom: 25px; }
+.subtitulo-secao { font-size: 16px; font-weight: bold; margin-top: 20px; margin-bottom: 15px; color: #000; text-align: left; }
+
+/* ================= FORMULÁRIOS E INPUTS ================= */
+
+/* Organiza campos lado a lado (ex: Nome do Aluno e Matrícula) */
+.linha-inputs {
+    display: flex;
+    gap: 15px;
+}
+
+/* Estilo do campo de digitar com a palavra cortando a linha (Estilo Material) */
+.grupo-input {
+    margin-bottom: 20px;
+    text-align: left;
+    position: relative;
+    width: 100%;
+}
+
+.grupo-input label {
+    font-size: 13px;
+    color: #555;
+    background: white;
+    padding: 0 5px;
+    margin-left: 10px;
+    position: absolute;
+    top: -8px; /* Faz a palavra subir para a borda */
+    z-index: 1;
+}
+
+.grupo-input input, .grupo-input select, .grupo-input textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+    outline: none;
+    background: transparent;
+    font-family: Arial, sans-serif;
+}
+
+.grupo-input input:focus { border-color: #2563eb; }
+
+/* ================= BOTÕES ================= */
+.btn-azul {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+.btn-azul:hover { background-color: #1d4ed8; }
+
+.botoes-acao { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.btn-acao {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+    border: 1px solid #bfdbfe;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+}
+.btn-acao:hover { background-color: #bfdbfe; }
+
+.btn-cinza {
+    background-color: #e2e8f0;
+    color: #334155;
+    border: none;
+    padding: 12px;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-cinza:hover { background-color: #cbd5e1; }
+
+.link-rodape { display: inline-block; margin-top: 15px; color: #666; font-size: 13px; text-decoration: underline; }
+
+/* ================= PESQUISA E ABAS (ACERVO) ================= */
+.abas-pesquisa { border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; display: flex; gap: 20px; }
+.aba-ativa { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 11px; font-weight: bold; cursor: pointer; margin-bottom: -12px; }
+.aba-inativa { color: #666; cursor: pointer; }
+
+.linha-pesquisa { display: flex; gap: 10px; }
+.linha-pesquisa input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 15px; outline: none; }
+.linha-pesquisa button { background-color: #2563eb; color: white; border: none; padding: 0 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+/* ================= TABELAS ================= */
+.tabela-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-top: 20px;
+    overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { border-bottom: 2px solid #eee; padding: 12px 8px; color: #333; }
+td { border-bottom: 1px solid #eee; padding: 12px 8px; color: #666; }
+
+/* ================= ALERTAS (ERRO E SUCESSO) ================= */
+.alerta-erro {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 2px solid #b91c1c;
+    border-radius: 5px;
+    padding: 15px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+.icone-sucesso {
+    font-size: 50px;
+    color: #16a34a;
+    background-color: #dcfce7;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
