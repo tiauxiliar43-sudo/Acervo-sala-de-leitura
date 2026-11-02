@@ -1,0 +1,65 @@
+name: Teste de Capacidade e Estresse
+
+on:
+  push:
+    branches: [ "main", "principal" ]
+  workflow_dispatch: # Permite rodar manualmente na aba Ações
+
+jobs:
+  testar-capacidade:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar código do repositório
+      uses: actions/checkout@v4
+
+    - name: Configurar ambiente Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Executar Simulação de Carga e Métricas
+      run: |
+        echo "=========================================="
+        echo "INICIANDO TESTE DE CAPACIDADE E ESTRESSE"
+        echo "=========================================="
+        python3 -c "
+        import os, time, sqlite3
+
+        db_path = 'banco_leitura.db'
+        if os.path.exists(db_path):
+            print(f'[OK] Banco de dados encontrado: {db_path}')
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            print('[INFO] Iniciando teste de estresse com inserção de 1.000 registros...')
+            inicio = time.time()
+            sucessos = 0
+            erros = 0
+            
+            for i in range(1, 1001):
+                try:
+                    # Ajuste o nome da tabela/coluna se necessário conforme o seu banco
+                    cursor.execute('INSERT INTO livros (titulo) VALUES (?)', (f'Livro Teste Carga {i}',))
+                    sucessos += 1
+                except Exception as e:
+                    erros += 1
+            
+            conn.commit()
+            fim = time.time()
+            tempo_total = fim - inicio
+            
+            print('------------------------------------------')
+            print('RELATÓRIO DE MÉTRICAS PARA O TRABALHO:')
+            print(f'-> Total de tentativas: 1000')
+            print(f'-> Inserções com sucesso: {sucessos}')
+            print(f'-> Falhas/Erros (Debilidades): {erros}')
+            print(f'-> Tempo total de processamento: {tempo_total:.4f} segundos')
+            print(f'-> Velocidade média: {(tempo_total/1000)*1000:.2f} ms por registro')
+            print('------------------------------------------')
+            
+            conn.close()
+        else:
+            print(f'[AVISO] O arquivo {db_path} não está na raiz do repositório.')
+            print('Arquivos disponíveis no diretório:', os.listdir('.'))
+        "
