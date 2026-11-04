@@ -41,7 +41,7 @@ jobs:
           print('[INFO] Executando verificação de integridade estrutural (PRAGMA integrity_check)...')
           cursor.execute('PRAGMA integrity_check;')
           resultado_integridade = cursor.fetchone()[0]
-          print(Resultado do Integrity Check: {resultado_integridade})
+          print(f'Resultado do Integrity Check: {resultado_integridade}')
 
           if resultado_integridade != 'ok':
               print('[FALHA] O banco de dados apresenta inconsistências estruturais!')
@@ -52,12 +52,10 @@ jobs:
           # 2. Teste de Restrições e Tratamento de Erros (Constraint Enforcement)
           print('[INFO] Testando resiliência a dados inválidos / duplicidade...')
           try:
-              # Tentando forçar duplicidade de ISBN ou erro proposital
               cursor.execute('INSERT INTO livros (titulo, autor, codigo_isbn, status) VALUES (?, ?, ?, ?)', 
                              ('Teste Integridade', 'Autor Teste', 'ISBN-UNICO-TESTE-999', 'Disponível'))
               conn.commit()
               
-              # Tendo inserir o mesmo ISBN para testar se a constraint UNIQUE bloqueia
               cursor.execute('INSERT INTO livros (titulo, autor, codigo_isbn, status) VALUES (?, ?, ?, ?)', 
                              ('Livro Duplicado', 'Outro Autor', 'ISBN-UNICO-TESTE-999', 'Disponível'))
               conn.commit()
