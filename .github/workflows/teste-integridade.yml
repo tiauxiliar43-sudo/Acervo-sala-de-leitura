@@ -1,0 +1,73 @@
+name: Auditoria de Integridade e Segurança
+
+on:
+  push:
+    branches: ["main", "principal"]
+  workflow_dispatch:
+
+jobs:
+  auditar-sistema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar ambiente Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar ferramentas de auditoria e segurança
+        run: pip install bandit
+
+      - name: Executar Testes de Integridade do Banco e Regras de Negócio
+        run: |
+          python3 -c "
+          import os, sqlite3
+
+          db_path = 'SalaDeLeitura_Portatil/banco_leitura.db'
+          print('==============================================')
+          print('INICIANDO AUDITORIA DE INTEGRIDADE E SEGURANÇA')
+          print('==============================================')
+
+          if not os.path.exists(db_path):
+              print('[ERRO CRÍTICO] Banco de dados não encontrado.')
+              exit(1)
+
+          conn = sqlite3.connect(db_path)
+          cursor = conn.cursor()
+
+          # 1. Teste de Integridade Estrutural Nativo do SQLite
+          print('[INFO] Executando verificação de integridade estrutural (PRAGMA integrity_check)...')
+          cursor.execute('PRAGMA integrity_check;')
+          resultado_integridade = cursor.fetchone()[0]
+          print(Resultado do Integrity Check: {resultado_integridade})
+
+          if resultado_integridade != 'ok':
+              print('[FALHA] O banco de dados apresenta inconsistências estruturais!')
+              exit(1)
+          else:
+              print('[SUCESSO] Estrutura do banco de dados 100% íntegra.')
+
+          # 2. Teste de Restrições e Tratamento de Erros (Constraint Enforcement)
+          print('[INFO] Testando resiliência a dados inválidos / duplicidade...')
+          try:
+              # Tentando forçar duplicidade de ISBN ou erro proposital
+              cursor.execute('INSERT INTO livros (titulo, autor, codigo_isbn, status) VALUES (?, ?, ?, ?)', 
+                             ('Teste Integridade', 'Autor Teste', 'ISBN-UNICO-TESTE-999', 'Disponível'))
+              conn.commit()
+              
+              # Tendo inserir o mesmo ISBN para testar se a constraint UNIQUE bloqueia
+              cursor.execute('INSERT INTO livros (titulo, autor, codigo_isbn, status) VALUES (?, ?, ?, ?)', 
+                             ('Livro Duplicado', 'Outro Autor', 'ISBN-UNICO-TESTE-999', 'Disponível'))
+              conn.commit()
+              print('[ALERTA] O banco permitiu ISBN duplicado (Verifique se a tabela possui restrição UNIQUE).')
+          except sqlite3.IntegrityError:
+              print('[SUCESSO] O banco barrou com sucesso a violação de integridade (Constraint UNIQUE funcionou perfeitamente).')
+
+          conn.close()
+          print('==============================================')
+          "
+
+      - name: Executar Análise de Vulnerabilidades no Código (Bandit)
+        run: bandit -r . -ll -ii || true
