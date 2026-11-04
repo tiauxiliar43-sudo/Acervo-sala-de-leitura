@@ -1,0 +1,138 @@
+name: Teste de Capacidade e Estresse
+
+on:
+  push:
+    branches: ["main", "principal"]
+  workflow_dispatch:
+
+jobs:
+  testar-capacidade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar ambiente Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências de monitoramento
+        run: pip install psutil
+
+      - name: Executar Simulação Avançada de Carga, Concorrência e Métricas
+        run: |
+          python3 -c "
+          import os, time, sqlite3, threading, psutil
+
+          db_path = 'SalaDeLeitura_Portatil/banco_leitura.db'
+          print('==========================================')
+          print('INICIANDO TESTE AVANÇADO DE ESTRESSE E CARGA')
+          print('==========================================')
+
+          if os.path.exists(db_path):
+              tamanho_antes = os.path.getsize(db_path)
+              print(f'[OK] Banco encontrado. Tamanho inicial: {tamanho_antes} bytes')
+          else:
+              print('[ERRO] Banco não encontrado no caminho especificado.')
+              exit(1)
+
+          # Monitoramento de hardware inicial
+          process = psutil.Process(os.getpid())
+          mem_inicio = process.memory_info().rss / (1024 * 1024)
+
+          # Configuração da Concorrência (Ex: 5 threads inserindo 1000 registros cada = 5000 total)
+          num_threads = 5
+          registros_por_thread = 1000
+          sucessos_total = [0]
+          erros_total = [0]
+          lock = threading.Lock()
+
+          def worker(thread_id):
+              conn = sqlite3.connect(db_path, timeout=10.0)
+              cursor = conn.cursor()
+              s = 0
+              e = 0
+              for i in range(1, registros_por_thread + 1):
+                  idx = (thread_id * 10000) + i
+                  try:
+                      cursor.execute('''
+                          INSERT INTO livros (titulo, autor, codigo_isbn, status) 
+                          VALUES (?, ?, ?, 'Disponível')
+                      ''', (f'Livro Concorrente {idx}', f'Autor {thread_id}', f'ISBN-T{thread_id}-{i}'))
+                      s += 1
+                  except Exception:
+                      e += 1
+              conn.commit()
+              conn.close()
+              with lock:
+                  sucessos_total[0] += s
+                  erros_total[0] += e
+
+          print(f'[INFO] Iniciando {num_threads} threads concorrentes ({num_threads * registros_por_thread} inserções totais)...')
+          inicio = time.time()
+
+          threads = []
+          for t_id in range(num_threads):
+              t = threading.Thread(target=worker, args=(t_id,))
+              threads.append(t)
+              t.start()
+
+          for t in threads:
+              t.join()
+
+          fim = time.time()
+          tempo_total = fim - inicio
+
+          # Teste de Leitura e Performance de Consultas (Selects)
+          conn = sqlite3.connect(db_path)
+          cursor = conn.cursor()
+          inicio_busca = time.time()
+          cursor.execute('SELECT COUNT(*) FROM livros')
+          total_livros = cursor.fetchone()[0]
+          cursor.execute('SELECT * FROM livros WHERE status = \"Disponível\" LIMIT 50')
+          cursor.fetchall()
+          fim_busca = time.time()
+          tempo_busca = fim_busca - inicio_busca
+          conn.close()
+
+          mem_fim = process.memory_info().rss / (1024 * 1024)
+          tamanho_depois = os.path.getsize(db_path)
+
+          print('------------------------------------------')
+          print(f'[RESULTADO] Tempo Total de Escrita: {tempo_total:.4f}s')
+          print(f'[RESULTADO] Sucessos: {sucessos_total[0]} | Erros: {erros_total[0]}')
+          print(f'[RESULTADO] Total de livros no banco: {total_livros}')
+          print(f'[RESULTADO] Tempo de Busca (SELECT): {tempo_busca:.4f}s')
+          print(f'[RESULTADO] Memória RAM Consumida: {mem_fim:.2f} MB')
+          print('==========================================')
+
+          # Geração do Relatório Formal em Markdown para o Orientador
+          report_content = f'''# Relatório Oficial de Teste de Carga e Estresse - Acervo
+          
+          ## 📊 Resumo Executivo
+          - **Data/Hora da Execução:** {time.strftime('%Y-%m-%d %H:%M:%S')}
+          - **Arquitetura de Teste:** Concorrência Multi-thread ({num_threads} threads paralelas)
+          - **Total de Inserções Tentadas:** {num_threads * registros_por_thread}
+          - **Operações Bem-Sucedidas:** {sucessos_total[0]}
+          - **Falhas/Erros:** {erros_total[0]}
+
+          ## ⏱️ Métricas de Desempenho
+          - **Tempo Total de Escrita (INSERT):** `{tempo_total:.4f} segundos`
+          - **Tempo de Consulta sob Carga (SELECT):** `{tempo_busca:.4f} segundos`
+          - **Uso de Memória RAM:** `{mem_fim:.2f} MB`
+          - **Tamanho Inicial do Banco:** `{tamanho_antes} bytes`
+          - **Tamanho Final do Banco:** `{tamanho_depois} bytes`
+          
+          > *Relatório gerado automaticamente pelo pipeline de CI/CD do GitHub Actions.*
+          '''
+          
+          with open('relatorio_desempenho.md', 'w') as f:
+              f.write(report_content)
+          "
+
+      - name: Salvar Relatório como Artefato no GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-de-desempenho
+          path: relatorio_desempenho.md
